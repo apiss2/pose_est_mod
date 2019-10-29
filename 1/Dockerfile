@@ -1,4 +1,6 @@
-FROM ubuntu:18.10
+FROM tensorflow/tensorflow:1.8.0-gpu-py3
+
+WORKDIR /
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONIOENCODING=utf-8
@@ -22,7 +24,6 @@ RUN pip3 install six
 RUN pip3 install matplotlib
 RUN pip3 install opencv-python
 RUN pip3 install imageio
-RUN pip3 install tensorflow
 RUN curl -L https://github.com/miu200521358/FCRN-DepthPrediction-vmd/archive/master.tar.gz \
  | tar -zxv \
  && mv FCRN-DepthPrediction-vmd-master FCRN-DepthPrediction-vmd

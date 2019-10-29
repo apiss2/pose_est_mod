@@ -2,7 +2,7 @@
 #!/bin/bash
 args="$@"
 
-function goto
+function goto()
 {
 label=$1
 cmd=$(sed -n "/$label:/{:a;n;p;ba};" $0 | grep -v ':$')
@@ -20,7 +20,7 @@ export  DISPLAY_IDX=0$IDX
 #  echo DISPLAY_IDX: %DISPLAY_IDX%
 
 #  ------------------------------------------------
-export  OUTPUT_SUB_DIR=$OUTPUT_JSON_DIR_PARENT$\$OUTPUT_JSON_DIR_NAME$_$DTTM$_idxDISPLAY_IDX
+export  OUTPUT_SUB_DIR="${OUTPUT_JSON_DIR_PARENT}/${OUTPUT_JSON_DIR_NAME}_${DTTM$_idxDISPLAY_IDX}"
 
 #  echo OUTPUT_SUB_DIR: %OUTPUT_SUB_DIR%
 

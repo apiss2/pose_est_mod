@@ -25,21 +25,15 @@ echo BULK OUTPUT_JSON_DIR: $OUTPUT_JSON_DIR
 #  --- JSON_output_subdir
 for 1 in $OUTPUT_JSON_DIR
 do
-(
-done
-
     export  OUTPUT_JSON_DIR_PARENT=$~dp1
     export  OUTPUT_JSON_DIR_NAME=$~n1
-)
+done
 
 export  PARENT_DIR_FULL=$OUTPUT_JSON_DIR_PARENT:~0,-1
 for i in $PARENT_DIR_FULL
 do
-(
-done
-
     export  PARENT_DIR_NAME=$~ni
-)
+done
 
 #  -- date
 export  DT=$date
@@ -54,7 +48,8 @@ export  DTTM=$dt:~0,4$dt:~5,2$dt:~8,2$_$TM2:~0,2$TM2:~3,2TM2:~6,2
 /sh/BulkDepth_sh.sh
 
 #  -- loop for capture num
-for /L $i in (1,1,$NUMBER_PEOPLE_MAX) do (
+for /L $i in (1,1,$NUMBER_PEOPLE_MAX)
+do
     export  IDX=$i
 
     #  -- 3d-pose-baseline
@@ -65,7 +60,7 @@ for /L $i in (1,1,$NUMBER_PEOPLE_MAX) do (
 
     #  -- VMD-3d-pose-baseline-multi
     /sh/BulkVmd_sh.sh
-)
+done
 
 echo ------------------------------------------
 echo trace result
