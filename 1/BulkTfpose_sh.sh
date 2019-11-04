@@ -1,48 +1,23 @@
 
 #!/bin/bash
-args="$@"
-
-function goto
-{
-label=$1
-cmd=$(sed -n "/$label:/{:a;n;p;ba};" $0 | grep -v ':$')
-eval "$cmd"
-exit
-}
-
-#@echo off
-
-echo ------------------------------------------
-echo tf-pose-estimation
-echo ------------------------------------------
+args=$@
 
 #  --- input_movie_path
 echo full_path of your movie
 echo human must be in frame no.1
-export  INPUT_VIDEO=
- read -p ": " INPUT_VIDEO
-#  echo INPUT_VIDEO???%INPUT_VIDEO%
-
-if  [ "${INPUT_VIDEO}" = "" ]; then
-    echo no_file_path_error
-else
-    echo enable_filepath
-fi
+export  INPUT_VIDEO="/home/input.mp4"
+#read -p ": " INPUT_VIDEO
 
 #  ---  The frame no. of beginning
 
 export  FRAME_FIRST=0
-
 export  NUMBER_PEOPLE_MAX=1
-
 export  FRAME_END=-1
-
+export  VERBOSE=2
+export  IS_DEBUG=warn
 #  ??????????????????????
 export  REVERSE_SPECIFIC_LIST=[]
 export  ORDER_SPECIFIC_LIST=[]
-
-export  VERBOSE=2
-export  IS_DEBUG=warn
 
 if  [ "$IS_DEBUG" = "yes" ]; then
     export  VERBOSE=3
@@ -59,13 +34,9 @@ fi
 #  --echo NUMBER_PEOPLE_MAX: %NUMBER_PEOPLE_MAX%
 
 #  -----------------------------------
-#  --- ??\???????????????
-for 1 in $INPUT_VIDEO
-do
-    export  INPUT_VIDEO_DIR=$~dp1
-    export  INPUT_VIDEO_FILENAME=$~n1
-    export  INPUT_VIDEO_FILENAME_EXT=$~nx1
-done
+export  INPUT_VIDEO_DIR=$(dirname $INPUT_VIDEO)
+export  INPUT_VIDEO_FILENAME=$(basename $INPUT_VIDEO)
+export  INPUT_VIDEO_FILENAME_EXT=${INPUT_VIDEO_FILENAME%.*}
 
 #  -- date
 export  DT=$date

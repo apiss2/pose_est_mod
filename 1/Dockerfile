@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:1.8.0-gpu-py3
+FROM nvcr.io/nvidia/tensorflow:18.07-py3
 
 WORKDIR /
 
@@ -22,7 +22,7 @@ RUN pip3 install pytz
 RUN pip3 install pyparsing
 RUN pip3 install six
 RUN pip3 install matplotlib
-RUN pip3 install opencv-python
+RUN pip3 install opencv-python==3.4.2.17
 RUN pip3 install imageio
 RUN curl -L https://github.com/miu200521358/FCRN-DepthPrediction-vmd/archive/master.tar.gz \
  | tar -zxv \
@@ -56,9 +56,9 @@ RUN curl -L https://github.com/miu200521358/VMD-3d-pose-baseline-multi/archive/m
  && mv VMD-3d-pose-baseline-multi-master VMD-3d-pose-baseline-multi
 RUN mkdir /VMD-3d-pose-baseline-multi/data/saved_sessions
 RUN curl -L http://visual.cs.ucl.ac.uk/pubs/liftingFromTheDeep/res/init_session.tar.gz \
- | tar -zxvC /VMD-3d-pose-baseline-multi/data/saved_sessions 
+ | tar -zxvC /VMD-3d-pose-baseline-multi/data/saved_sessions
 RUN curl -L http://visual.cs.ucl.ac.uk/pubs/liftingFromTheDeep/res/prob_model.tar.gz \
- | tar -zxvC /VMD-3d-pose-baseline-multi/data/saved_sessions 
+ | tar -zxvC /VMD-3d-pose-baseline-multi/data/saved_sessions
 
 # tf-pose-estimation
 RUN pip3 install Cython
