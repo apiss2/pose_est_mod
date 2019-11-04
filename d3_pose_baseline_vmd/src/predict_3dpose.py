@@ -61,7 +61,7 @@ tf.app.flags.DEFINE_string("output", None, "3d-pose-baseline output Data directo
 # Train or load
 tf.app.flags.DEFINE_boolean("sample", False, "Set to True for sampling.")
 tf.app.flags.DEFINE_boolean("use_cpu", False, "Whether to use the CPU")
-tf.app.flags.DEFINE_integer("load", 0, "Try to load a previous checkpoint.")
+tf.app.flags.DEFINE_integer("load", 4874200, "Try to load a previous checkpoint.") #元は0
 
 # Misc
 tf.app.flags.DEFINE_boolean("use_fp16", False, "Train using fp16 instead of fp32.")

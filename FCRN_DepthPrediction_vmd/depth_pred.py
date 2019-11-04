@@ -455,7 +455,7 @@ def read_openpose_start_json(json_path):
             data = json.load(open("tensorflow/json/all_empty_keypoints.json"))
 
         # 12桁の数字文字列から、フレームINDEX取得
-        frame_idx = int(re.findall("(\d{12})", file_name)[0])
+        frame_idx = int(re.findall(r"(\d{12})", file_name)[0])
 
         if (frame_idx <= 0 or is_started == False) and len(data["people"]) > 0:
             # 何らかの人物情報が入っている場合に開始

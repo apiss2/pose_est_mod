@@ -1,10 +1,16 @@
 from testing.remote import conf_pass
 import argparse
+import tensorflow as tf
 
-conf_pass()
+from testing.test2 import is_enable
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--centerz_model_path', dest='centerz_model_path', help='Converted parameters for the centerz model', type=str)
-args = parser.parse_args()
+if __name__ == '__main__':
+    conf_pass()
 
-print(args.centerz_model_path)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--centerz_model_path', dest='centerz_model_path', help='Converted parameters for the centerz model', type=str)
+    args = parser.parse_args()
+
+    print(args.centerz_model_path)
+
+    is_enable()

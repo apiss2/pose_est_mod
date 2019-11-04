@@ -28,28 +28,11 @@ level = {0:logging.ERROR,
         2:logging.INFO,
         3:logging.DEBUG}
 
-def show_anim_curves(anim_dict, _plt):
-    val = np.array(list(anim_dict.values()))
-    for o in range(0,36,2):
-        x = val[:,o]
-        y = val[:,o+1]
-        logger.debug("x")
-        logger.debug(x)
-        logger.debug("y")
-        logger.debug(y)
-        _plt.plot(x, 'r--', linewidth=0.2)
-        _plt.plot(y, 'g', linewidth=0.2)
-    return _plt
-
-def baseline(now_str):
-
+def baseline(now_str, openpose_output_dir):
+    logger.setLevel(level[FLAGS.verbose])
     logger.debug("FLAGS.person_idx={0}".format(FLAGS.person_idx))
 
-    # ディレクトリ構成が変わったので、JSON出力と同階層に出力(2/9)
-    if FLAGS.output is None:
-        subdir = openpose_output_dir
-    else:
-        subdir = FLAGS.output
+    subdir = openpose_output_dir
 
     os.makedirs(subdir, exist_ok=True)
 
@@ -77,11 +60,7 @@ def baseline(now_str):
 
     logger.info("reading and smoothing done. start feeding 3d-pose-baseline")
     logger.debug(smoothed)
-    plt.figure(2)
-    smooth_curves_plot = show_anim_curves(smoothed, plt)
-    pngName = subdir + '/smooth_plot.png'
-    smooth_curves_plot.savefig(pngName)
-    
+
     enc_in = np.zeros((1, 64))
     enc_in[0] = [0 for i in range(64)]
 
@@ -121,7 +100,7 @@ def baseline(now_str):
             #if frame % 300 == 0:
             #    print(frame)
 
-            # map list into np array  
+            # map list into np array
             joints_array = np.zeros((1, 36))
             joints_array[0] = [0 for i in range(36)]
             for o in range(len(joints_array[0])):
@@ -147,13 +126,6 @@ def baseline(now_str):
                 enc_in[0][14 * 2 + j] = (enc_in[0][15 * 2 + j] + enc_in[0][13 * 2 + j]) / 2
                 # Spine
                 enc_in[0][12 * 2 + j] = (enc_in[0][0 * 2 + j] + enc_in[0][13 * 2 + j]) / 2
-
-            # set spine
-            # spine_x = enc_in[0][24]
-            # spine_y = enc_in[0][25]
-
-            # logger.debug("enc_in - 1")
-            # logger.debug(enc_in)
 
             poses2d = enc_in
 
@@ -269,77 +241,10 @@ def baseline(now_str):
 
             poses3d_list[frame] = poses3d_ground
 
-        for frame, (poses3d, poses2d) in enumerate(zip(poses3d_list, poses2d_list)):
-            if frame % 200 == 0:
-                logger.info("output frame {}".format(frame))
-
-            # max = 0
-            # min = 10000
-
-            # logger.debug("enc_in - 2")
-            # logger.debug(enc_in)
-
-            for j in range(32):
-                tmp = poses3d[j * 3 + 2]
-                poses3d[j * 3 + 2] = -poses3d[j * 3 + 1]
-                poses3d[j * 3 + 1] = tmp
-            #         if poses3d[i][j * 3 + 2] > max:
-            #             max = poses3d[i][j * 3 + 2]
-            #         if poses3d[i][j * 3 + 2] < min:
-            #             min = poses3d[i][j * 3 + 2]
-
-            # for i in range(poses3d.shape[0]):
-            #     for j in range(32):
-            #         poses3d[i][j * 3 + 2] = max - poses3d[i][j * 3 + 2] + min
-            #         poses3d[i][j * 3] += (spine_x - 630)
-            #         poses3d[i][j * 3 + 2] += (500 - spine_y)
-
-            # Plot 3d predictions
-            ax = plt.subplot(gs1[subplot_idx - 1], projection='3d')
-            ax.view_init(18, 280)    
-            # logger.debug(np.min(poses3d))
-            # if np.min(poses3d) < -1000 and before_pose is not None:
-            #    poses3d = before_pose
-
-            p3d = poses3d
-            # logger.debug("poses3d")
-            # logger.debug(poses3d)
-            if frame == 0:
-                first_xyz = [0,0,0]
-                first_xyz[0], first_xyz[1], first_xyz[2]= p3d[0], p3d[1], p3d[2]
-
-            if level[FLAGS.verbose] <= logging.INFO:
-                viz.show3Dpose(p3d, ax, lcolor="#9b59b6", rcolor="#2ecc71", add_labels=True, root_xyz=first_xyz)
-
-                # 各フレームの単一視点からのはINFO時のみ
-                pngName = frame3d_dir + '/tmp_{0:012d}.png'.format(frame)
-                plt.savefig(pngName)
-                png_lib.append(imageio.imread(pngName))            
-                # before_pose = poses3d
-
-            # 各フレームの角度別出力はデバッグ時のみ
-            if level[FLAGS.verbose] == logging.DEBUG:
-
-                for azim in [0, 45, 90, 135, 180, 225, 270, 315, 360]:
-                    ax2 = plt.subplot(gs1[subplot_idx - 1], projection='3d')
-                    ax2.view_init(18, azim)
-                    viz.show3Dpose(p3d, ax2, lcolor="#FF0000", rcolor="#0000FF", add_labels=True, root_xyz=first_xyz)
-
-                    pngName2 = frame3d_dir + '/tmp_{0:012d}_{1:03d}.png'.format(frame, azim)
-                    plt.savefig(pngName2)
-            
-            #関節位置情報の出力
-            write_pos_data(poses3d, ax, posf)
-
         posf.close()
         smoothedf.close()
 
-        # INFO時は、アニメーションGIF生成
-        if level[FLAGS.verbose] <= logging.INFO:
-            logger.info("creating Gif {0}/movie_smoothing.gif, please Wait!".format(subdir))
-            imageio.mimsave('{0}/movie_smoothing.gif'.format(subdir), png_lib, fps=FLAGS.gif_fps)
-
-        logger.info("Done!".format(pngName))
+        logger.info("{} Done!".format(pngName))
 
 # 骨格の長さ合計（xy平面上）
 def sum_length_xy(channels, dim):
@@ -440,28 +345,15 @@ def write_pos_data(channels, ax, posf):
         # 始点がまだ出力されていない場合、出力
         if I[i] not in outputed:
             # 0: index, 1: x軸, 2:Y軸, 3:Z軸
-            logger.debug("I -> x={0}, y={1}, z={2}".format(x[0], y[0], z[0]))    
+            logger.debug("I -> x={0}, y={1}, z={2}".format(x[0], y[0], z[0]))
             posf.write(str(I[i]) + " "+ str(x[0]) +" "+ str(y[0]) +" "+ str(z[0]) + ", ")
             outputed.append(I[i])
 
         # 終点がまだ出力されていない場合、出力
         if J[i] not in outputed:
-            logger.debug("J -> x={0}, y={1}, z={2}".format(x[1], y[1], z[1]))    
+            logger.debug("J -> x={0}, y={1}, z={2}".format(x[1], y[1], z[1]))
             posf.write(str(J[i]) + " "+ str(x[1]) +" "+ str(y[1]) +" "+ str(z[1]) + ", ")
             outputed.append(J[i])
-
-        # xyz.append([x, y, z])
-
-        # lines = ax.plot(x, y, z)
-        # logger.debug("lines")
-        # logger.debug(dir(lines))
-        # for l in lines:
-        #     logger.debug("l.get_data: ")
-        #     logger.debug(l.get_data())
-        #     logger.debug("l.get_data orig: ")
-        #     logger.debug(l.get_data(True))
-        #     logger.debug("l.get_path: ")
-        #     logger.debug(l.get_path())
 
     #終わったら改行
     posf.write("\n")

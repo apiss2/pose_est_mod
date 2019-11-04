@@ -1,7 +1,7 @@
 import datetime
 from os.path import dirname, join, basename
 
-from tf_pose_estimation.tf_pose import pose_estimation
+from tf_pose_estimation.tfpose import pose_estimation
 from FCRN_DepthPrediction_vmd.depth_pred import depth_pred
 from d3_pose_baseline_vmd.src.d3pose_vmd import baseline
 
@@ -14,6 +14,6 @@ def video2vmd(input_video_path):
 
     pose_estimation(input_video_path, json_dir)
     depth_pred(now_str, input_video_path, json_dir)
-    baseline(now_str)
+    baseline(now_str, person_path)
     #vmd_pose_baseline
 

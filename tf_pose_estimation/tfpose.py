@@ -7,14 +7,13 @@ import numpy as np
 import os
 import sys
 
-from tf_pose.estimator import TfPoseEstimator
-from tf_pose.networks import get_graph_path, model_wh
+from .tf_pose.estimator import TfPoseEstimator
+from .tf_pose.networks import get_graph_path, model_wh
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
 
-def pose_estimation(input_video_path, output_json_dir)
-    fps_time = 0
+def pose_estimation(input_video_path, output_json_dir):
     model = 'mobilenet_thin' #'cmu / mobilenet_thin / mobilenet_v2_large / mobilenet_v2_small'
 
     w, h = model_wh('432x368')
@@ -23,9 +22,6 @@ def pose_estimation(input_video_path, output_json_dir)
 
     if cap.isOpened() is False:
         sys.exit(1)
-
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     sys.stdout.write("frame: ")
     frame = 0
@@ -44,7 +40,6 @@ def pose_estimation(input_video_path, output_json_dir)
         image = TfPoseEstimator.draw_humans(image, humans, imgcopy=False, frame=frame, output_json_dir=output_json_dir)
         frame += 1
 
-        fps_time = time.time()
         if cv2.waitKey(1) == 27:
             break
 
