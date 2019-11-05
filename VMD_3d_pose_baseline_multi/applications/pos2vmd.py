@@ -11,7 +11,7 @@ def usage(prog):
 
 import re
 from PyQt5.QtGui import QQuaternion, QVector3D
-from VmdWriter import VmdBoneFrame, VmdInfoIk, VmdShowIkFrame, VmdWriter
+from .VmdWriter import VmdBoneFrame, VmdInfoIk, VmdShowIkFrame, VmdWriter
 
 def positions_to_frames(pos, head_rotation=None):
     """convert positions to bone frames"""

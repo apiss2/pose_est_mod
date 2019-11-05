@@ -10,10 +10,11 @@ import shutil
 import json
 import sys
 import csv
-import sort_people
+
+from . import sort_people
 
 # tensorflow
-import models
+from . import models
 import tensorflow as tf
 
 logging.basicConfig(level=logging.INFO)

@@ -2,13 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import tensorflow as tf
-import data_utils
-import viz
+from . import data_utils
+from . import viz
 import re
-import cameras
+from . import cameras
 import json
 import os
-from predict_3dpose import create_model
+from . from predict_3dpose import create_model
 import cv2
 import imageio
 import logging

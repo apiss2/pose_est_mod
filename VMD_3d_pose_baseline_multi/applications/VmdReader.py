@@ -6,7 +6,7 @@ import logging
 import re
 import numpy as np
 from PyQt5.QtGui import QQuaternion, QVector3D
-from VmdWriter import VmdBoneFrame
+from .VmdWriter import VmdBoneFrame
 
 logger = logging.getLogger("__main__").getChild(__name__)
 
@@ -25,7 +25,7 @@ class VmdReader():
     def read_vmd_file(self, filename):
         """Read VMD data to a file"""
         fin = open(filename, "rb").read()
-        
+
         motion = VmdMotion()
 
         # vmdバージョン

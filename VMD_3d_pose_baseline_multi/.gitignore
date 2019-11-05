@@ -20,6 +20,8 @@ data/vmd/
 
 born/*.csv
 
+*.mp4
+
 *.html
 3DToVmd_semi.bat
 3DToVmdSelf.bat

@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import math
 import os
+from os.path import dirname, abspath, join
 import random
 import sys
 import time
@@ -17,15 +18,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
-import procrustes
+from . import procrustes
 
-import viz
-import cameras
-import data_utils
-import linear_model
+from . import viz
+from . import cameras
+from . import data_utils
+from . import linear_model
 
 tf.app.flags.DEFINE_float("learning_rate", 1e-3, "Learning rate")
-tf.app.flags.DEFINE_float("dropout", 1, "Dropout keep probability. 1 means no dropout")
+tf.app.flags.DEFINE_float("dropout", 0.5, "Dropout keep probability. 1 means no dropout") #元は1.0
 tf.app.flags.DEFINE_integer("batch_size", 64, "Batch size to use during training")
 tf.app.flags.DEFINE_integer("epochs", 200, "How many epochs we should train for")
 tf.app.flags.DEFINE_boolean("camera_frame", False, "Convert 3d poses to camera coordinates")
@@ -34,22 +35,24 @@ tf.app.flags.DEFINE_boolean("batch_norm", False, "Use batch_normalization")
 
 # Data loading
 tf.app.flags.DEFINE_boolean("predict_14", False, "predict 14 joints")
-tf.app.flags.DEFINE_boolean("use_sh", False, "Use 2d pose predictions from StackedHourglass")
+tf.app.flags.DEFINE_boolean("use_sh", True, "Use 2d pose predictions from StackedHourglass")#元はFalse
 tf.app.flags.DEFINE_string("action","All", "The action to train on. 'All' means all the actions")
+tf.app.flags.DEFINE_boolean("input_video_path", None, "Set path.")
 
 # Architecture
 tf.app.flags.DEFINE_integer("linear_size", 1024, "Size of each model layer.")
 tf.app.flags.DEFINE_integer("num_layers", 2, "Number of layers in the model.")
-tf.app.flags.DEFINE_boolean("residual", False, "Whether to add a residual connection every 2 layers")
+tf.app.flags.DEFINE_boolean("residual", True, "Whether to add a residual connection every 2 layers")#元はFalse
 
 # Evaluation
 tf.app.flags.DEFINE_boolean("procrustes", False, "Apply procrustes analysis at test time")
 tf.app.flags.DEFINE_boolean("evaluateActionWise",False, "The dataset to use either h36m or heva")
 
 # Directories
-tf.app.flags.DEFINE_string("cameras_path","data/h36m/cameras.h5","Directory to load camera parameters")
-tf.app.flags.DEFINE_string("data_dir",   "data/h36m/", "Data directory")
-tf.app.flags.DEFINE_string("train_dir", "experiments", "Training directory.")
+d = dirname(dirname(abspath(__file__)))
+tf.app.flags.DEFINE_string("cameras_path",join(d,"data/h36m/cameras.h5"),"Directory to load camera parameters")
+tf.app.flags.DEFINE_string("data_dir",   join(d,"data/h36m/"), "Data directory")
+tf.app.flags.DEFINE_string("train_dir", join(d,"experiments"), "Training directory.")
 
 # openpose
 tf.app.flags.DEFINE_string("openpose", "openpose_output", "openpose output Data directory")
@@ -69,6 +72,8 @@ tf.app.flags.DEFINE_boolean("use_fp16", False, "Train using fp16 instead of fp32
 FLAGS = tf.app.flags.FLAGS
 
 # Windows用にディレクトリ階層を簡略化
+train_dir = FLAGS.train_dir
+"""
 train_dir = os.path.join( FLAGS.train_dir,
   FLAGS.action,
   'dropout_{0}'.format(FLAGS.dropout),
@@ -90,6 +95,7 @@ train_dir = os.path.join( FLAGS.train_dir,
   'use_stacked_hourglass' if FLAGS.use_sh else 'nsh',
   # 'use_stacked_hourglass' if FLAGS.use_sh else 'not_stacked_hourglass',
   'predict_14' if FLAGS.predict_14 else 'predict_17')
+"""
 
 #print( train_dir )
 summaries_dir = os.path.join( train_dir, "log" ) # Directory for TB summaries

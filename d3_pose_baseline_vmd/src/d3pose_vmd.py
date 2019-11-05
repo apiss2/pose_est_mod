@@ -2,16 +2,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import tensorflow as tf
-import data_utils
-import viz
-import cameras
+
+from . import data_utils
+from . import viz
+from . import cameras
+from .predict_3dpose import create_model
+from . import openpose_utils
+
 import os
-from predict_3dpose import create_model
 import cv2
 import imageio
 import logging
 import datetime
-import openpose_utils
 import sys
 import shutil
 import math
@@ -68,14 +70,13 @@ def baseline(now_str, openpose_output_dir):
 
     SUBJECT_IDS = [1, 5, 6, 7, 8, 9, 11]
     rcams = cameras.load_cameras(FLAGS.cameras_path, SUBJECT_IDS)
-    train_set_2d, test_set_2d, data_mean_2d, data_std_2d, dim_to_ignore_2d, dim_to_use_2d = data_utils.read_2d_predictions(
+    _, _, data_mean_2d, data_std_2d, dim_to_ignore_2d, dim_to_use_2d = data_utils.read_2d_predictions(
         actions, FLAGS.data_dir)
-    train_set_3d, test_set_3d, data_mean_3d, data_std_3d, dim_to_ignore_3d, dim_to_use_3d, train_root_positions, test_root_positions = data_utils.read_3d_data(
+    _, _, data_mean_3d, data_std_3d, dim_to_ignore_3d, _, _, _ = data_utils.read_3d_data(
         actions, FLAGS.data_dir, FLAGS.camera_frame, rcams, FLAGS.predict_14)
 
     # before_pose = None
     device_count = {"GPU": 1}
-    png_lib = []
     with tf.Session(config=tf.ConfigProto(
             device_count=device_count,
             allow_soft_placement=True)) as sess:
@@ -94,7 +95,7 @@ def baseline(now_str, openpose_output_dir):
         length_2d_list = []
         length_3d_list = []
 
-        for n, (frame, xy) in enumerate(smoothed.items()):
+        for _, (frame, xy) in enumerate(smoothed.items()):
             if frame % 200 == 0:
                 logger.info("calc idx {0}, frame {1}".format(idx, frame))
             #if frame % 300 == 0:
@@ -152,7 +153,6 @@ def baseline(now_str, openpose_output_dir):
             plt.axis('off')
             all_poses_3d.append( poses3d )
             enc_in, poses3d = map( np.vstack, [enc_in, all_poses_3d] )
-            subplot_idx, exidx = 1, 1
 
             poses3d_list.append(poses3d[0])
             poses2d_list.append(poses2d[0])
@@ -240,11 +240,11 @@ def baseline(now_str, openpose_output_dir):
                 poses3d_ground[i * 3 + 2] = poses3d[i * 3 + 2]
 
             poses3d_list[frame] = poses3d_ground
+            #関節位置情報の出力
+            write_pos_data(poses3d, posf)
 
         posf.close()
         smoothedf.close()
-
-        logger.info("{} Done!".format(pngName))
 
 # 骨格の長さ合計（xy平面上）
 def sum_length_xy(channels, dim):
@@ -280,7 +280,7 @@ def calc_move_average(data, n):
 # 2次元でのNeckからHipまでの長さの平均を取得
 def get_length_neck2hip_mean(smoothed):
     length = []
-    for frame, xy in smoothed.items():
+    for _, xy in smoothed.items():
         neck_x = xy[1 * 2]
         neck_y = xy[1 * 2 + 1]
         # Hip = RHip * 0.5 + LHip * 0.5
@@ -305,7 +305,7 @@ def camera_center(openpose_output_dir):
 def camera_center_temp(smoothed):
     neck_x = []
     neck_y = []
-    for (frame, xy) in smoothed.items():
+    for (_, xy) in smoothed.items():
         neck_x.append(xy[1 * 2])
         neck_y.append(xy[1 * 2 + 1])
 
@@ -324,7 +324,7 @@ def camera_center_temp(smoothed):
     return x, y
 
 
-def write_pos_data(channels, ax, posf):
+def write_pos_data(channels, posf):
 
     assert channels.size == len(data_utils.H36M_NAMES)*3, "channels should have 96 entries, it has %d instead" % channels.size
     vals = np.reshape( channels, (len(data_utils.H36M_NAMES), -1) )

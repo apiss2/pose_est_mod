@@ -7,16 +7,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import tensorflow as tf
-import data_utils
-import viz
-import cameras
+from . import data_utils
+from . import viz
+from . import cameras
 import os
 from predict_3dpose import create_model
 import cv2
 import imageio
 import logging
 import datetime
-import openpose_utils
+from . import openpose_utils
 import sys
 import shutil
 import math
@@ -302,7 +302,7 @@ def main(_):
 
             # Plot 3d predictions
             ax = plt.subplot(gs1[subplot_idx - 1], projection='3d')
-            ax.view_init(18, 280)    
+            ax.view_init(18, 280)
             # logger.debug(np.min(poses3d))
             # if np.min(poses3d) < -1000 and before_pose is not None:
             #    poses3d = before_pose
@@ -320,7 +320,7 @@ def main(_):
                 # 各フレームの単一視点からのはINFO時のみ
                 pngName = frame3d_dir + '/tmp_{0:012d}.png'.format(frame)
                 plt.savefig(pngName)
-                png_lib.append(imageio.imread(pngName))            
+                png_lib.append(imageio.imread(pngName))
                 # before_pose = poses3d
 
             # 各フレームの角度別出力はデバッグ時のみ

@@ -5,6 +5,7 @@ from PyQt5.QtGui import QQuaternion, QVector4D, QVector3D, QMatrix4x4
 import logging
 import json
 import math
+from os.path import dirname, join, basename, abspath
 
 logger = logging.getLogger("__main__").getChild(__name__)
 
@@ -15,9 +16,10 @@ def smooth_filter(bone_frame_dic, is_groove, smooth_times):
     smooth_move(bone_frame_dic, is_groove, smooth_times)
     smooth_angle(bone_frame_dic, smooth_times)
     smooth_IK(bone_frame_dic, smooth_times)
-    
+
     # JSONファイルから設定を読み込む
-    config = json.load(open("filter/config.json", "r"))
+    filename = join(dirname(abspath(dirname(__file__))), "filter/config.json")
+    config = json.load(open(filename, "r"))
 
     # 移動用フィルタ
     pxfilter = OneEuroFilter(**config)
@@ -41,7 +43,7 @@ def smooth_filter(bone_frame_dic, is_groove, smooth_times):
                 if frame.frame < len(bone_frame_dic[key]) - 1 \
                 and frame.position == bone_frame_dic[key][n+1].position \
                 and frame.rotation == bone_frame_dic[key][n+1].rotation:
-                    
+
                     # 位置と回転が同じ場合、同値とみなす
                     logger.debug("IK同値: %s %s", n, frame.name)
 
@@ -71,7 +73,7 @@ def smooth_filter(bone_frame_dic, is_groove, smooth_times):
             #     rotation.setY(rotation.y() * -1)
             #     rotation.setZ(rotation.z() * -1)
             #     rotation.setScalar(rotation.scalar() * -1)
-            
+
             if key != "センター" and key != "グルーブ":
                 # XYZWそれぞれにフィルターをかける
                 rx = rxfilter(rotation.x(), frame.frame)
@@ -81,8 +83,6 @@ def smooth_filter(bone_frame_dic, is_groove, smooth_times):
 
                 # 各要素(w, x, y, z)に対し独立に変換をかけているので、正規化しておく
                 frame.rotation = QQuaternion(rw, rx, ry, rz).normalized()
-    
-
 
 # IKを滑らかにする
 def smooth_IK(bone_frame_dic, smooth_times):
@@ -139,8 +139,6 @@ def smooth_move_bone(bone_frame_dic, smooth_times, target_bones):
                         new_prev1_pos /= 2
                         prev1_bf.position = new_prev1_pos
 
-
-
 # OneEuroFilter
 # オリジナル：https://www.cristal.univ-lille.fr/~casiez/1euro/
 # ----------------------------------------------------------------------------
@@ -157,7 +155,7 @@ class LowPassFilter(object):
             raise ValueError("alpha (%s) should be in (0.0, 1.0]"%alpha)
         self.__alpha = alpha
 
-    def __call__(self, value, timestamp=None, alpha=None):        
+    def __call__(self, value, timestamp=None, alpha=None):
         if alpha is not None:
             self.__setAlpha(alpha)
         if self.__y is None:
@@ -170,7 +168,7 @@ class LowPassFilter(object):
 
     def lastValue(self):
         return self.__y
-    
+
     # IK用処理スキップ
     def skip(self, value):
         self.__y = value
@@ -196,7 +194,7 @@ class OneEuroFilter(object):
         self.__x = LowPassFilter(self.__alpha(self.__mincutoff))
         self.__dx = LowPassFilter(self.__alpha(self.__dcutoff))
         self.__lasttime = None
-        
+
     def __alpha(self, cutoff):
         te    = 1.0 / self.__freq
         tau   = 1.0 / (2*math.pi*cutoff)

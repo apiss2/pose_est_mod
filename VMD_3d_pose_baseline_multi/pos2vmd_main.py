@@ -14,12 +14,12 @@ import datetime
 import numpy as np
 import csv
 
-from .VmdWriter import VmdBoneFrame, VmdInfoIk, VmdShowIkFrame, VmdWriter
-from . import pos2vmd_utils
-from . import pos2vmd_calc
-from . import pos2vmd_frame
-from . import pos2vmd_filter
-from . import pos2vmd_reduce
+from .applications.VmdWriter import VmdBoneFrame, VmdInfoIk, VmdShowIkFrame, VmdWriter
+from .applications import pos2vmd_utils
+from .applications import pos2vmd_calc
+from .applications import pos2vmd_frame
+from .applications import pos2vmd_filter
+from .applications import pos2vmd_reduce
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ def position_list_to_vmd_multi(positions_multi, positions_gan_multi, upright_fil
     # 開始フレームインデックス
     start_frame = pos2vmd_utils.load_start_frame(start_frame_file)
     logger.info("開始フレームインデックス: %d", start_frame)
-    
+
     # 関節二次元情報を読み込み
     smoothed_2d = pos2vmd_utils.load_smoothed_2d(smoothed_file)
 
@@ -169,11 +169,9 @@ def position_list_to_vmd_multi(positions_multi, positions_gan_multi, upright_fil
         reduce_vmd_file = pos2vmd_utils.output_vmd(reduce_bone_frame_dic, vmd_file, upright_idxs, is_ik, "reduce")
         logger.info("間引き VMDファイル出力完了: {0}".format(reduce_vmd_file))
 
-
-
 def position_multi_file_to_vmd(position_file, position_gan_file, upright_file, vmd_file, smoothed_file, bone_csv_file, depth_file, start_frame_file, center_xy_scale, center_z_scale, smooth_times, threshold_pos, threshold_rot, is_ik, heelpos, upright_target):
     positions_multi = pos2vmd_utils.read_positions_multi(position_file)
-    
+
     # 3dpose-gan がない場合はNone
     if os.path.exists(position_gan_file):
         positions_gan_multi = pos2vmd_utils.read_positions_multi(position_gan_file)
@@ -181,6 +179,45 @@ def position_multi_file_to_vmd(position_file, position_gan_file, upright_file, v
         positions_gan_multi = None
 
     position_list_to_vmd_multi(positions_multi, positions_gan_multi, upright_file, vmd_file, smoothed_file, bone_csv_file, depth_file, start_frame_file, center_xy_scale, center_z_scale, smooth_times, threshold_pos, threshold_rot, is_ik, heelpos, upright_target)
+
+def position2vmd(now_str, base_dir, output_filename):
+    position_file = base_dir + "/pos.txt"
+    smoothed_file = base_dir + "/smoothed.txt"
+    depth_file = base_dir + "/depth.txt"
+    start_frame_file = base_dir + "/start_frame.txt"
+    position_gan_file = base_dir + "/pos_gan.txt"
+
+    bone = os.path.join(os.path.dirname(base_dir),'VMD_3d_pose_baseline_multi/born/animasa_miku_born.csv')
+    centerxy = 30
+    centerz = 0
+    smooth_times = 1
+    threshold_pos = 0.5
+    threshold_rot = 3
+    is_ik = True
+    heelpos = 0
+    verbose = 2
+
+    #bone_filename, _ = os.path.splitext(os.path.basename(bone))
+    upright_file = open("{0}/upright.txt".format(base_dir), 'w')
+
+    suffix = ""
+    suffix = "{0}_h{1}".format(suffix, str(heelpos))
+    suffix = "{0}_z{1}".format(suffix, str(centerz))
+    suffix = "{0}_s{1}".format(suffix, str(smooth_times))
+    suffix = "{0}_p{1}".format(suffix, str(threshold_pos))
+    suffix = "{0}_r{1}".format(suffix, str(threshold_rot))
+
+    #vmd_file = "{0}/{3}_{1}{2}_[type].vmd".format(base_dir, now_str, suffix, bone_filename)
+    vmd_file = output_filename
+    upright_file = open("{0}/upright.txt".format(base_dir), 'w')
+    logger.setLevel(level[verbose])
+
+    upright_target = None
+
+    position_multi_file_to_vmd(position_file, position_gan_file, upright_file,\
+        vmd_file, smoothed_file, bone, depth_file, start_frame_file, centerxy,\
+        centerz, smooth_times, threshold_pos, threshold_rot, is_ik, heelpos, upright_target)
+
 
 if __name__ == '__main__':
     import sys
@@ -194,12 +231,13 @@ if __name__ == '__main__':
                         default='',
                         help='upright target directory')
     parser.add_argument('-b', '--bone', dest='bone', type=str,
+                        default='born/animasa_miku_born.csv',
                         help='target model bone csv')
     parser.add_argument('-v', '--verbose', dest='verbose', type=int,
                         default=2,
                         help='logging level')
     parser.add_argument('-c', '--center-xyscale', dest='centerxy', type=int,
-                        default=0,
+                        default=30, #元は0
                         help='center scale')
     parser.add_argument('-z', '--center-z-scale', dest='centerz', type=float,
                         default=0,
@@ -208,10 +246,10 @@ if __name__ == '__main__':
                         default=1,
                         help='smooth times')
     parser.add_argument('-p', '--move-reduce-pos', dest='threshold_pos', type=float,
-                        default=0,
+                        default=0.5, #元は0
                         help='move bone reduce threshold')
     parser.add_argument('-r', '--move-reduce-rot', dest='threshold_rot', type=float,
-                        default=0,
+                        default=3, #元は0
                         help='rotation bone reduce threshold')
     parser.add_argument('-k', '--leg-ik', dest='legik', type=int,
                         default=1,
@@ -237,24 +275,17 @@ if __name__ == '__main__':
 
     suffix = ""
 
-    # ganは使用しない
-    # if os.path.exists(position_gan_file) == False:
-    #     suffix = "_ganなし"
-    
     # ボーンCSVファイル名・拡張子
     bone_filename, bone_fileext = os.path.splitext(os.path.basename(args.bone))
 
     if os.path.exists(depth_file) == False:
         suffix = "{0}_depthなし".format(suffix)
-    
+
     if is_ik == False:
         suffix = "{0}_FK".format(suffix)
 
     # 踵位置補正
     suffix = "{0}_h{1}".format(suffix, str(args.heelpos))
-
-    # センターXY
-    # suffix = "{0}_xy{1}".format(suffix, str(args.centerxy))
 
     # センターZ
     suffix = "{0}_z{1}".format(suffix, str(args.centerz))
@@ -275,12 +306,6 @@ if __name__ == '__main__':
 
     # ログレベル設定
     logger.setLevel(level[args.verbose])
-
     verbose = args.verbose
-
-    # 調整用が指定されており、かつ処理対象と違うならば保持
-    upright_target = None
-    if args.upright_target != args.target and len(args.upright_target) > 0:
-        upright_target = args.upright_target
 
     position_multi_file_to_vmd(position_file, position_gan_file, upright_file, vmd_file, smoothed_file, args.bone, depth_file, start_frame_file, args.centerxy, args.centerz, args.smooth_times, args.threshold_pos, args.threshold_rot, is_ik, args.heelpos, upright_target)

@@ -28,7 +28,7 @@ class VmdInfoIk():
     def __init__(self, name='', onoff=0):
         self.name = name
         self.onoff = onoff
-        
+
 class VmdShowIkFrame():
     def __init__(self):
         self.frame = 0
@@ -43,7 +43,7 @@ class VmdShowIkFrame():
             fout.write(k.name)
             fout.write(bytearray([0 for i in range(len(k.name), 20)])) # IKボーン名20Byteの残りを\0で埋める
             fout.write(struct.pack('b', k.onoff))
-        
+
 class VmdWriter():
     def __init__(self):
         pass

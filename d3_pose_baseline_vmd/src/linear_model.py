@@ -11,8 +11,8 @@ import os
 import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
-import data_utils
-import cameras as cam
+from . import data_utils
+from . import cameras as cam
 
 def kaiming(shape, dtype, partition_info=None):
   """Kaiming initialization as described in https://arxiv.org/pdf/1502.01852.pdf

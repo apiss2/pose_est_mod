@@ -9,9 +9,9 @@ import tensorflow as tf
 import time
 import json
 import os
-from tf_pose import common
-from tf_pose.common import CocoPart
-from tf_pose.tensblur.smoother import Smoother
+from . import common
+from .common import CocoPart
+from .tensblur.smoother import Smoother
 
 _tf_pose_estimator_tensorrt_disabled=False
 try:
@@ -20,7 +20,7 @@ except ModuleNotFoundError:
     _tf_pose_estimator_tensorrt_disabled=True
 
 try:
-    from tf_pose.pafprocess import pafprocess
+    from .pafprocess import pafprocess
 except ModuleNotFoundError as e:
     print(e)
     print('you need to build c++ library for pafprocess. See : https://github.com/ildoonet/tf-pose-estimation/tree/master/tf_pose/pafprocess')
