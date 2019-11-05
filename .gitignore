@@ -109,6 +109,7 @@ timeline*.json
 *.avi
 *.png
 *.gif
+*.mp4
 
 # project customs 
 tmp
