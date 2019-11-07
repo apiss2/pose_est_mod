@@ -25,7 +25,7 @@ class VmdReader():
     def read_vmd_file(self, filename):
         """Read VMD data to a file"""
         fin = open(filename, "rb").read()
-
+        
         motion = VmdMotion()
 
         # vmdバージョン

@@ -7,6 +7,7 @@ from __future__ import print_function
 
 from PyQt5.QtGui import QQuaternion, QVector4D, QVector3D, QMatrix4x4
 import os
+from os.path import dirname, join, basename, abspath
 import re
 import argparse
 import logging
@@ -181,50 +182,23 @@ def position_multi_file_to_vmd(position_file, position_gan_file, upright_file, v
         positions_gan_multi = None
 
     position_list_to_vmd_multi(positions_multi, positions_gan_multi, upright_file, vmd_file, smoothed_file, bone_csv_file, depth_file, start_frame_file, center_xy_scale, center_z_scale, smooth_times, threshold_pos, threshold_rot, is_ik, heelpos, upright_target)
+    
 
-if __name__ == '__main__':
-    import sys
-    if (len(sys.argv) < 13):
-        logger.error("引数不足")
-
-    parser = argparse.ArgumentParser(description='3d-pose-baseline to vmd')
-    parser.add_argument('-t', '--target', dest='target', type=str,
-                        help='target directory (3d-pose-baseline-vmd)')
-    parser.add_argument('-u', '--upright-target', dest='upright_target', type=str,
-                        default='',
-                        help='upright target directory')
-    parser.add_argument('-b', '--bone', dest='bone', type=str,
-                        help='target model bone csv')
-    parser.add_argument('-v', '--verbose', dest='verbose', type=int,
-                        default=2,
-                        help='logging level')
-    parser.add_argument('-c', '--center-xyscale', dest='centerxy', type=int,
-                        default=0,
-                        help='center scale')
-    parser.add_argument('-z', '--center-z-scale', dest='centerz', type=float,
-                        default=0,
-                        help='center z scale')
-    parser.add_argument('-s', '--smooth-times', dest='smooth_times', type=int,
-                        default=1,
-                        help='smooth times')
-    parser.add_argument('-p', '--move-reduce-pos', dest='threshold_pos', type=float,
-                        default=0,
-                        help='move bone reduce threshold')
-    parser.add_argument('-r', '--move-reduce-rot', dest='threshold_rot', type=float,
-                        default=0,
-                        help='rotation bone reduce threshold')
-    parser.add_argument('-k', '--leg-ik', dest='legik', type=int,
-                        default=1,
-                        help='leg ik')
-    parser.add_argument('-e', '--heel position', dest='heelpos', type=float,
-                        default=0,
-                        help='heel position correction')
-    args = parser.parse_args()
+def position2vmd(json_path,output_path):
+    upright_target=None#''
+    verbose=1
+    centerxy=30
+    centerz=0
+    smooth_times=1
+    threshold_pos=0.5
+    threshold_rot=3
+    legik=1
+    heelpos=0
 
     # resultディレクトリだけ指定させる
-    base_dir = args.target
+    base_dir = json_path
 
-    is_ik = True if args.legik == 1 else False
+    is_ik = True if legik == 1 else False
 
     # 入力と出力のファイル名は固定
     position_file = base_dir + "/pos.txt"
@@ -240,47 +214,41 @@ if __name__ == '__main__':
     # ganは使用しない
     # if os.path.exists(position_gan_file) == False:
     #     suffix = "_ganなし"
-    
+
     # ボーンCSVファイル名・拡張子
-    bone_filename, bone_fileext = os.path.splitext(os.path.basename(args.bone))
+    born_path = join(dirname(abspath(dirname(__file__))),"born/animasa_miku_born.csv")
+    bone_filename, bone_fileext = os.path.splitext(os.path.basename(born_path))
 
     if os.path.exists(depth_file) == False:
         suffix = "{0}_depthなし".format(suffix)
-    
+
     if is_ik == False:
         suffix = "{0}_FK".format(suffix)
-
+    """
     # 踵位置補正
-    suffix = "{0}_h{1}".format(suffix, str(args.heelpos))
-
+    suffix = "{0}_h{1}".format(suffix, str(heelpos))
     # センターXY
-    # suffix = "{0}_xy{1}".format(suffix, str(args.centerxy))
-
+    # suffix = "{0}_xy{1}".format(suffix, str(centerxy))
     # センターZ
-    suffix = "{0}_z{1}".format(suffix, str(args.centerz))
-
+    suffix = "{0}_z{1}".format(suffix, str(centerz))
     # 円滑化回数
-    suffix = "{0}_s{1}".format(suffix, str(args.smooth_times))
-
+    suffix = "{0}_s{1}".format(suffix, str(smooth_times))
     # 移動間引き
-    suffix = "{0}_p{1}".format(suffix, str(args.threshold_pos))
-
+    suffix = "{0}_p{1}".format(suffix, str(threshold_pos))
     # 回転間引き
-    suffix = "{0}_r{1}".format(suffix, str(args.threshold_rot))
-
+    suffix = "{0}_r{1}".format(suffix, str(threshold_rot))
     vmd_file = "{0}/{3}_{1:%Y%m%d_%H%M%S}{2}_[type].vmd".format(base_dir, datetime.datetime.now(), suffix, bone_filename)
-
+    """
+    vmd_file=output_path
     #直立インデックスファイル
     upright_file = open("{0}/upright.txt".format(base_dir), 'w')
 
     # ログレベル設定
-    logger.setLevel(level[args.verbose])
-
-    verbose = args.verbose
+    logger.setLevel(level[verbose])
 
     # 調整用が指定されており、かつ処理対象と違うならば保持
-    upright_target = None
-    if args.upright_target != args.target and len(args.upright_target) > 0:
-        upright_target = args.upright_target
+    #upright_target = None
+    #if upright_target != json_path and len(upright_target) > 0:
+    #    upright_target = upright_target
 
-    position_multi_file_to_vmd(position_file, position_gan_file, upright_file, vmd_file, smoothed_file, args.bone, depth_file, start_frame_file, args.centerxy, args.centerz, args.smooth_times, args.threshold_pos, args.threshold_rot, is_ik, args.heelpos, upright_target)
+    position_multi_file_to_vmd(position_file, position_gan_file, upright_file, vmd_file, smoothed_file, born_path, depth_file, start_frame_file, centerxy, centerz, smooth_times, threshold_pos, threshold_rot, is_ik, heelpos, upright_target)

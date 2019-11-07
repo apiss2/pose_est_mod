@@ -76,19 +76,19 @@ def position_to_frame(bone_frame_dic, pos, pos_gan, smoothed_2d, frame, is_upper
     bf.name = b'\x8d\xb6\x8C\xA8' # '左肩'
     bf.rotation = left_shoulder_rotation
     bone_frame_dic["左肩"].append(bf)
-
+    
     # 左腕
     bf = VmdBoneFrame(frame)
     bf.name = b'\x8d\xb6\x98\x72' # '左腕'
     bf.rotation = left_arm_rotation
     bone_frame_dic["左腕"].append(bf)
-
+    
     # 左ひじ
     bf = VmdBoneFrame(frame)
     bf.name = b'\x8d\xb6\x82\xd0\x82\xb6' # '左ひじ'
     bf.rotation = left_elbow_rotation
     bone_frame_dic["左ひじ"].append(bf)
-
+    
     # 右肩の初期値
     gan_right_shoulder_initial_orientation = QQuaternion.fromDirection(QVector3D(-1, 0, 0), QVector3D(0, -1, 0))
     right_shoulder_initial_orientation = QQuaternion.fromDirection(QVector3D(-2, -0.8, 0), QVector3D(0.5, 0.5, 1))
@@ -97,19 +97,19 @@ def position_to_frame(bone_frame_dic, pos, pos_gan, smoothed_2d, frame, is_upper
     # 右手系の回転
     right_shoulder_rotation, right_arm_rotation, right_elbow_rotation = \
         position_to_frame_arm_one_side(frame, pos, pos_gan, upper_correctqq, upper_body_rotation1, upper_body_rotation2, gan_right_shoulder_initial_orientation, right_shoulder_initial_orientation, right_arm_initial_orientation, RIGHT_POINT, is_gan, slope_motion, "右")
-
+    
     # 右肩
     bf = VmdBoneFrame(frame)
     bf.name = b'\x89\x45\x8C\xA8' # '右肩'
     bf.rotation = right_shoulder_rotation
     bone_frame_dic["右肩"].append(bf)
-
+    
     # 右腕
     bf = VmdBoneFrame(frame)
     bf.name = b'\x89\x45\x98\x72' # '右腕'
     bf.rotation = right_arm_rotation
     bone_frame_dic["右腕"].append(bf)
-
+    
     # 右ひじ
     bf = VmdBoneFrame(frame)
     bf.name = b'\x89\x45\x82\xd0\x82\xb6' # '右ひじ'
@@ -143,7 +143,7 @@ def position_to_frame(bone_frame_dic, pos, pos_gan, smoothed_2d, frame, is_upper
     bf.name = b'\x8d\xb6\x91\xab' # '左足'
     bf.rotation = left_leg_rotation
     bone_frame_dic["左足"].append(bf)
-
+    
     # 左ひざ
     bf = VmdBoneFrame(frame)
     bf.name = b'\x8d\xb6\x82\xd0\x82\xb4' # '左ひざ'
@@ -178,13 +178,13 @@ def position_to_frame(bone_frame_dic, pos, pos_gan, smoothed_2d, frame, is_upper
     bf.name = b'\x89\x45\x91\xab' # '右足'
     bf.rotation = right_leg_rotation
     bone_frame_dic["右足"].append(bf)
-
+    
     # 右ひざ
     bf = VmdBoneFrame(frame)
     bf.name = b'\x89\x45\x82\xd0\x82\xb4' # '右ひざ'
     bf.rotation = right_knee_rotation
     bone_frame_dic["右ひざ"].append(bf)
-
+        
     # センター(箱だけ作る)
     bf = VmdBoneFrame(frame)
     bf.name = b'\x83\x5A\x83\x93\x83\x5E\x81\x5B' # 'センター'
@@ -229,7 +229,7 @@ LEFT_POINT = {
 }
 
 def position_to_frame_head(frame, pos, pos_gan, upper_body_rotation1, upper_body_rotation2, upper_correctqq, is_gan, slope_motion):
-    if is_gan:
+    if is_gan: 
         # 体幹が3dpose-ganで決定されている場合
 
         # 首
@@ -275,7 +275,7 @@ def position_to_frame_head(frame, pos, pos_gan, upper_body_rotation1, upper_body
 
         # 一旦オイラー角に変換して、角度のかかり具合を補正し、再度クォータニオンに変換する
         neck_correctqq = QQuaternion.fromEulerAngles(slope_motion.frames["首"][0].rotation.toEulerAngles() * y_degree).inverted()
-
+    
     neck_rotation = neck_correctqq * neck_rotation
 
     # 頭の傾きデータ
@@ -286,7 +286,7 @@ def position_to_frame_head(frame, pos, pos_gan, upper_body_rotation1, upper_body
 
         # 一旦オイラー角に変換して、角度のかかり具合を補正し、再度クォータニオンに変換する
         head_correctqq = QQuaternion.fromEulerAngles(slope_motion.frames["頭"][0].rotation.toEulerAngles() * y_degree).inverted()
-
+    
     head_rotation = head_correctqq * head_rotation
 
     return neck_rotation, head_rotation
@@ -306,7 +306,7 @@ def is_smoothed_prev_frame(bone_frame_dic, frame, bone_rotation_dic, angle):
                 or abs(prev_euler.y() - now_euler.y()) > angle \
                 or abs(prev_euler.z() - now_euler.z()) > angle :
                 return False
-
+    
     return True
 
 def position_to_frame_trunk(bone_frame_dic, frame, pos, pos_gan, is_upper2_body, slope_motion):
@@ -328,7 +328,7 @@ def position_to_frame_trunk(bone_frame_dic, frame, pos, pos_gan, is_upper2_body,
             # # Zを反転させる
             # g_upper_body_rotation1.setZ( g_upper_body_rotation1.z() * -1 )
             # g_lower_body_rotation.setZ( g_lower_body_rotation.z() * -1 )
-
+            
             logger.debug("gan採用: %s u1=%s u2=%s l=%s", frame, g_upper_body_rotation1, g_upper_body_rotation2, g_lower_body_rotation)
 
             return g_upper_body_rotation1, g_upper_body_rotation2, g_upper_correctqq, g_lower_body_rotation, g_lower_correctqq, True
@@ -336,7 +336,7 @@ def position_to_frame_trunk(bone_frame_dic, frame, pos, pos_gan, is_upper2_body,
     # 3d-pose-baseline による上半身FK
     upper_body_rotation1, upper_body_rotation2, upper_correctqq \
         = position_to_frame_upper_calc(frame, pos, is_upper2_body, slope_motion)
-
+        
     # 3d-pose-baseline による下半身FK
     lower_body_rotation, lower_correctqq \
         = position_to_frame_lower_calc(frame, pos, slope_motion)
@@ -389,11 +389,11 @@ def position_to_frame_upper_calc(frame, pos, is_upper2_body, slope_motion):
             upper_correctqq = QQuaternion.fromEulerAngles(slope_motion.frames["上半身2"][0].rotation.toEulerAngles() * y_degree).inverted()
 
         upper_body_rotation2 = upper_correctqq * upper_body_rotation1.inverted() * upper_body_rotation2
-
+        
     else:
         # 上半身2は初期クォータニオン
         upper_body_rotation2 = QQuaternion()
-
+        
         """convert positions to bone frames"""
         # 上半身
         direction = pos[8] - pos[7]
@@ -404,7 +404,7 @@ def position_to_frame_upper_calc(frame, pos, is_upper2_body, slope_motion):
 
         # 傾き補正
         upper_correctqq = QQuaternion()
-
+        
         # 傾きデータがある場合、補正をかける
         if slope_motion is not None:
             # Y軸の回転具合を求める
@@ -414,7 +414,7 @@ def position_to_frame_upper_calc(frame, pos, is_upper2_body, slope_motion):
             upper_correctqq = QQuaternion.fromEulerAngles(slope_motion.frames["上半身"][0].rotation.toEulerAngles() * y_degree).inverted()
 
         upper_body_rotation1 = upper_correctqq * upper_body_rotation1
-
+           
     return upper_body_rotation1, upper_body_rotation2, upper_correctqq
 
 # 下半身FK（実質計算用）
@@ -471,7 +471,7 @@ def position_to_frame_shoulder_one_side_calc(frame, pos, upper_correctqq, upper_
 
     # 肩ポーンの回転から親ボーンの回転を差し引いてbf.rotationに格納する。
     shoulder_rotation = shoulder_correctqq * upper_body_rotation2.inverted() * upper_body_rotation1.inverted() * rotation # 後で使うので保存しておく
-
+    
     # 腕
     direction = pos[points['Elbow']] - pos[points['Shoulder']]
     up = QVector3D.crossProduct((pos[points['Elbow']] - pos[points['Shoulder']]), (pos[points['Wrist']] - pos[points['Elbow']]))
@@ -489,7 +489,7 @@ def position_to_frame_shoulder_one_side_calc(frame, pos, upper_correctqq, upper_
 
     # 腕ポーンの回転から親ボーンの回転を差し引いてbf.rotationに格納する。
     arm_rotation = arm_correctqq * shoulder_rotation.inverted() * upper_body_rotation2.inverted() * upper_body_rotation1.inverted() * rotation # 後で使うので保存しておく
-
+    
     # ひじ
     direction = pos[points['Wrist']] - pos[points['Elbow']]
     up = QVector3D.crossProduct((pos[points['Elbow']] - pos[points['Shoulder']]), (pos[points['Wrist']] - pos[points['Elbow']]))
@@ -501,14 +501,14 @@ def position_to_frame_shoulder_one_side_calc(frame, pos, upper_correctqq, upper_
     if slope_motion is not None:
         # Y軸の回転具合を求める
         y_degree = (180 - abs(rotation.toEulerAngles().y())) / 180
-
+       
         elbow_correctqq = QQuaternion.fromEulerAngles(slope_motion.frames["{0}ひじ".format(direction_name)][0].rotation.toEulerAngles() * y_degree).inverted()
 
     # ひじポーンの回転から親ボーンの回転を差し引いてbf.rotationに格納する。
     # upper_body_rotation * left_shoulder_rotation * left_arm_rotation * bf.rotation = rotation なので、
     elbow_rotation = elbow_correctqq * arm_rotation.inverted() * shoulder_rotation.inverted() * upper_body_rotation2.inverted() * upper_body_rotation1.inverted() * rotation
     # bf.rotation = (upper_body_rotation * left_arm_rotation).inverted() * rotation # 別の表現
-
+    
     return shoulder_rotation, arm_rotation, elbow_rotation
 
 
@@ -525,7 +525,7 @@ def position_to_frame_leg_one_side(frame, pos, pos_gan, lower_correctqq, lower_b
                 or (abs(leg_rotation.toEulerAngles().x()) > 55 or abs(leg_rotation.toEulerAngles().y()) > 55 or abs(leg_rotation.toEulerAngles().z()) > 55 \
                 or abs(knee_rotation.toEulerAngles().x()) > 55 or abs(knee_rotation.toEulerAngles().y()) > 55 or abs(knee_rotation.toEulerAngles().z()) > 55 ):
             return leg_rotation, knee_rotation
-
+    
     # 3d-pose-baseline のFK
     leg_rotation, knee_rotation = \
         position_to_frame_leg_one_side_calc(frame, pos, lower_correctqq, lower_body_rotation, points, slope_motion, direction_name)
@@ -552,7 +552,7 @@ def position_to_frame_leg_one_side_calc(frame, pos, lower_correctqq, lower_body_
         leg_correctqq = QQuaternion.fromEulerAngles(slope_motion.frames["{0}足".format(direction_name)][0].rotation.toEulerAngles() * y_degree).inverted()
 
     leg_rotation = leg_correctqq * lower_body_rotation.inverted() * rotation
-
+    
     # ひざ
     bf = VmdBoneFrame(frame)
     bf.name = b'\x8d\xb6\x82\xd0\x82\xb4' # 'ひざ'
@@ -567,7 +567,7 @@ def position_to_frame_leg_one_side_calc(frame, pos, lower_correctqq, lower_body_
     if slope_motion is not None:
         # Y軸の回転具合を求める
         y_degree = (180 - abs(rotation.toEulerAngles().y())) / 180
-
+        
         # 一旦オイラー角に変換して、角度のかかり具合を補正し、再度クォータニオンに変換する
         knee_correctqq = QQuaternion.fromEulerAngles(slope_motion.frames["{0}ひざ".format(direction_name)][0].rotation.toEulerAngles() * y_degree).inverted()
 

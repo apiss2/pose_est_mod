@@ -125,3 +125,7 @@ src/pafprocess/pafprocess.py
 src/pafprocess/pafprocess_wrap.cpp
 src/pafprocess/pafprocess_wrap.cxx
 /output/
+
+*.tfevents.*
+*checkpoint*
+VMD_3d_pose_baseline_multi/data/saved_sessions/*

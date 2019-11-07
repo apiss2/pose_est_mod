@@ -35,6 +35,9 @@ def calc_upright_bones(bone_frame_dic, target_bones):
                 angles.append(abs(eular.z()))
         values.append( np.nanmax(angles) )
 
+    # logger.info(keys)
+    # logger.info(values)
+    
     upright_bones_dic = dict(zip(keys, values))
 
     # オイラー角の絶対最大値昇順でソートする。NaNは無視する
@@ -47,11 +50,41 @@ def calc_upright_bones(bone_frame_dic, target_bones):
     for k, v in sorted_upright_bones_dic[:100]:
         if is_almost_same_idx(upright_idxs, k, 30):
             continue
-
+        
         upright_idxs.append(k)
 
         if len(upright_idxs) >= 10:
             break
+            
+
+    # # 直立に近い順のボーンリスト
+    # upright_bones = [[0 for i in range(len(target_bones))] for j in range(100)]
+    # for n, bone_name in enumerate(target_bones):
+    #     # 直立昇順のインデックスリストを生成する
+    #     for m, bone in enumerate(calc_upright_bone(bone_name)):
+    #         # 配列は持ち方逆転
+    #         # 0: 直立に近い順のインデックス
+    #         # 1: ボーンインデックス
+    #         upright_bones[m][n] = bone.frame
+
+    # for n, bones_parts in enumerate(upright_bones[:3]):
+    #     for m, b in enumerate(bones_parts[:5]):
+    #         logger.debug("ソート前: {0} {1}: {2}".format(n, m, b))
+
+    # upright_bones_flat = np.array(upright_bones_dic).flatten()
+
+    # # 直立っぽいのを検出する
+    # most_common_idxs = Counter(sorted_upright_bones_dic.values()).most_common()
+    # logger.info(most_common_idxs)
+
+    # upright_idxs = []
+    # for most_common_idx in most_common_idxs:
+    #     # 0フレーム目は除外
+    #     if most_common_idx[0] != 0 and is_almost_same_idx(upright_idxs, most_common_idx[0], 30) == False:
+    #         upright_idxs.append(most_common_idx[0])
+
+    #     if len(upright_idxs) >= 10:
+    #         break
 
     return upright_idxs
 

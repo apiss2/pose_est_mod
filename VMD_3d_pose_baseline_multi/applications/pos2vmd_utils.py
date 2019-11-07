@@ -16,7 +16,7 @@ logger = logging.getLogger("__main__").getChild(__name__)
 
 def output_vmd(bone_frame_dic, vmd_file, upright_idxs, is_ik, vmd_type):
     writer = VmdWriter()
-
+    
     # ディクショナリ型の疑似二次元配列から、一次元配列に変換
     bone_frames = []
     for k,v in bone_frame_dic.items():
@@ -24,9 +24,8 @@ def output_vmd(bone_frame_dic, vmd_file, upright_idxs, is_ik, vmd_type):
             bone_frames.append(bf)
 
     # vmd出力ファイルにフレーム番号再設定
-    #output_vmd_file = vmd_file.replace("[uDDDD]", "u{0:05d}".format(upright_idxs[0]))
-    #output_vmd_file = output_vmd_file.replace("[type]", vmd_type)
-    output_vmd_file = vmd_file
+    output_vmd_file = vmd_file.replace("[uDDDD]", "u{0:05d}".format(upright_idxs[0]))
+    output_vmd_file = output_vmd_file.replace("[type]", vmd_type)
 
     # writer.write_vmd_file(vmd_file, bone_frames, showik_frames, expression_frames)
     showik_frames = make_showik_frames(is_ik)
@@ -68,7 +67,7 @@ def load_upright_target(upright_target):
                     target_start_pos[poss[0]].setX(float(poss[1]))
                     target_start_pos[poss[0]].setY(float(poss[2]))
                     target_start_pos[poss[0]].setZ(float(poss[3]))
-
+            
     # logger.info("target_start_pos")
     # logger.info(target_start_pos)
 
@@ -119,11 +118,9 @@ def load_slope_vmd(is_upper2_body):
 
 # 開始フレームを取得
 def load_start_frame(start_frame_file):
-    try:
-        with open(start_frame_file, "r") as sf:
-            return int(sf.readline())
-    except:
-        return 0
+    n = 0
+    with open(start_frame_file, "r") as sf:
+        return int(sf.readline())
 
 
 
@@ -246,7 +243,7 @@ def load_smoothed_2d(smoothed_file):
     n = 0
     with open(smoothed_file, "r") as sf:
         line = sf.readline() # 1行を文字列として読み込む(改行文字も含まれる)
-
+        
         while line:
             # 空白で複数項目に分解
             smoothed = re.split("\s+", line)
@@ -267,25 +264,25 @@ def load_smoothed_2d(smoothed_file):
             smoothed_2d[n][SMOOTHED_2D_INDEX["RAnkle"]] = QVector3D(float(smoothed[20]), float(smoothed[21]), 0)
             # 左足首
             smoothed_2d[n][SMOOTHED_2D_INDEX["LAnkle"]] = QVector3D(float(smoothed[26]), float(smoothed[27]), 0)
-
+        
             n += 1
 
             line = sf.readline()
-
+    
     return smoothed_2d
 
 # ファイルのエンコードを取得する
 def get_file_encoding(file_path):
 
-    try:
+    try: 
         f = open(file_path, "rb")
         fbytes = f.read()
         f.close()
     except:
         raise Exception("unknown encoding!")
-
+        
     codelst = ('utf_8', 'shift-jis')
-
+    
     for encoding in codelst:
         try:
             fstr = fbytes.decode(encoding) # bytes文字列から指定文字コードの文字列に変換
@@ -295,11 +292,11 @@ def get_file_encoding(file_path):
             return encoding
         except:
             pass
-
+            
     raise Exception("unknown encoding!")
-
-
-# 上半身2があるか
+    
+    
+# 上半身2があるか    
 def is_upper2_body_bone(bone_csv_file):
 
     # ボーンファイルを開く
@@ -309,7 +306,7 @@ def is_upper2_body_bone(bone_csv_file):
         for row in reader:
             if row[1] == "上半身2" or row[2].lower() == "upper body2":
                 return True
-
+    
     return False
 
 

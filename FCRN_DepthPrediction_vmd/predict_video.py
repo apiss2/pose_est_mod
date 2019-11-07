@@ -1,21 +1,23 @@
 import argparse
 import os
+from os.path import dirname, join, basename, abspath
 import numpy as np
 from matplotlib import pyplot as plt
 from PIL import Image
 import logging
 import cv2
 import datetime
+import os
 import re
 import shutil
 import imageio
 import json
 import sys
 import csv
-import sort_people
+from . import sort_people
 
 # tensorflow
-import models
+from . import models
 import tensorflow as tf
 
 logging.basicConfig(level=logging.INFO)
@@ -25,9 +27,9 @@ logger = logging.getLogger(__name__)
 file_logger = logging.getLogger("message")
 
 level = {0: logging.ERROR,
-        1: logging.WARNING,
-        2: logging.INFO,
-        3: logging.DEBUG}
+            1: logging.WARNING,
+            2: logging.INFO,
+            3: logging.DEBUG}
 
 # 入力値
 HEIGHT = 480
@@ -117,7 +119,7 @@ def predict_video(now_str, model_path, centerz_model_path, video_path, depth_pat
             fnum += 1
             # キー保持
             fkey = fidx
-
+        
         fkey = -1
         fnum = 0
         for row in zreader:
@@ -135,7 +137,7 @@ def predict_video(now_str, model_path, centerz_model_path, video_path, depth_pat
 
         pdepthf.close()
         pdepthzf.close()
-
+        
         # 自分の深度情報ディレクトリにコピー
         shutil.copyfile(past_depthf_path, depthf_path)
         shutil.copyfile(past_depthzf_path, depthzf_path)
@@ -156,7 +158,7 @@ def predict_video(now_str, model_path, centerz_model_path, video_path, depth_pat
 
         height = int(org_height * scale)
         logger.debug("width: {0}, height: {1}".format(width, height))
-
+        
         # FCRN用グラフ
         graph_FCRN = tf.Graph()
         with graph_FCRN.as_default():
@@ -177,6 +179,29 @@ def predict_video(now_str, model_path, centerz_model_path, video_path, depth_pat
         # リストア
         saver_FCRN.restore(sess_FCRN, model_path)
 
+        # # ---------------------------
+        # # センターZ用グラフ
+        # graph_centerz = tf.Graph()
+        # with graph_centerz.as_default():
+        #     # 深度用プレースホルダ
+        #     phi_predict_ph = tf.placeholder(tf.float32, [None,1], name="phi_predict_ph")
+
+        #     saver_centerz = tf.train.import_meta_graph(centerz_model_path + ".meta")
+        #     ckpt = tf.train.get_checkpoint_state(os.path.dirname(centerz_model_path))
+
+        #     init_graph_centerz = tf.global_variables_initializer()
+        
+        # # センターZ用セッション
+        # sess_centerz = tf.InteractiveSession(graph=graph_centerz)
+        # # 初期化
+        # sess_centerz.run(init_graph_centerz)
+        # # モデルリストア
+        # saver_centerz.restore(sess_centerz, ckpt.model_checkpoint_path)
+        # # 予測関数生成
+        # centerz_y = create_centerz_model(sess_centerz, phi_predict_ph)
+            
+        # --------------------------
+
         # 深度ファイルがない場合、出力する
         depthf = open(depthf_path, 'w')
         depthzf = open(depthzf_path, 'w')
@@ -187,6 +212,8 @@ def predict_video(now_str, model_path, centerz_model_path, video_path, depth_pat
         while(cap.isOpened()):
             # 動画から1枚キャプチャして読み込む
             flag, frame = cap.read()  # Capture frame-by-frame
+
+            # logger.debug("start_frame: %s, n: %s, len(openpose_2d): %s", start_frame, n, len(openpose_2d))
 
             # 深度推定のindex
             _idx = cnt - start_frame
@@ -201,7 +228,7 @@ def predict_video(now_str, model_path, centerz_model_path, video_path, depth_pat
             # 明示的に終わりが指定されている場合、その時も終了する
             if flag == False or cnt >= json_size or (end_frame_no > 0 and cnt >= end_frame_no):
                 break
-
+            
             if ((_idx % interval == 0 and _idx < json_size) or (cnt >= json_size - 1)):
                 logger.debug("_idx: %s", _idx)
 
@@ -232,11 +259,13 @@ def predict_video(now_str, model_path, centerz_model_path, video_path, depth_pat
                     data = json.load(open(_file))
                 except Exception as e:
                     logger.warning("JSON読み込み失敗のため、空データ読み込み, %s %s", _file, e)
-                    data = json.load(open("tensorflow/json/all_empty_keypoints.json"))
+                    filename = join(abspath(dirname(__file__)),"json/all_empty_keypoints.json")
+                    data = json.load(open(filename))
 
                 for dpidx in range(len(data["people"]), number_people_max):
                     # 人数分のデータが無い場合、空データを読み込む
-                    data["people"].append(json.load(open("tensorflow/json/one_keypoints.json")))
+                    filename = join(abspath(dirname(__file__)),"json/one_keypoints.json")
+                    data["people"].append(json.load(open(filename)))
 
                 for dpidx in range(number_people_max):
                     logger.debug("dpidx: %s, len(data[people]): %s", dpidx, len(data["people"]))
@@ -295,7 +324,7 @@ def predict_video(now_str, model_path, centerz_model_path, video_path, depth_pat
                     # 深度データ(センターZ)
                     depthzf.write("{0}, {1}\n".format(_idx, ','.join([ str(x) for x in pred_multi_z_ary[_idx][dpidx] ])))
 
-            # インクリメント
+            # インクリメント        
             cnt += 1
 
         depthf.close()
@@ -364,7 +393,7 @@ def predict_video(now_str, model_path, centerz_model_path, video_path, depth_pat
                     past_depths[sidx] = all_now_depths[pidx]
                     past_depths_z[sidx] = all_now_depths_z[pidx]
 
-        # インクリメント
+        # インクリメント        
         cnt += 1
 
     if is_avi_output:
@@ -389,7 +418,7 @@ def recalc_depth(depth_ary, interval, json_size):
     # 1人目の0F目の場合、基準深度として平均値を保存
     base_depth = pred_sum / pred_cnt if pred_cnt > 0 else 0
 
-    logger.info("基準深度取得: base_depth: %s, pred_sum: %s, pred_cnt: %s", base_depth, pred_sum, pred_cnt)
+    logger.info("基準深度取得: base_depth: %s, pred_sum: %s, pred_cnt: %s", base_depth, pred_sum, pred_cnt)   
 
     # 基準深度で入れ直し
     for fidx, pred_ary in enumerate(depth_ary):
@@ -432,7 +461,7 @@ def outputAVI(depth_path, json_path, number_people_max, now_str, start_frame, en
             avi_height = int(org_height*0.32)
 
             out = cv2.VideoWriter(out_path, fourcc, 30.0, (avi_width, avi_height))
-
+            
             while(cap.isOpened()):
                 # 動画から1枚キャプチャして読み込む
                 flag, frame = cap.read()  # Capture frame-by-frame
@@ -476,7 +505,7 @@ def outputAVI(depth_path, json_path, number_people_max, now_str, start_frame, en
                                 # cv2.drawMarker( frame, (int(data["people"][0]["pose_keypoints_2d"][o]+5), int(data["people"][0]["pose_keypoints_2d"][o+1]+5)), color, markerType=cv2.MARKER_TILTED_CROSS, markerSize=10)
                                 # 座標のXY位置に点を置く。原点が左上なので、ちょっとずらす
                                 cv2.circle( frame, (int(data["people"][0]["pose_keypoints_2d"][o]+1), int(data["people"][0]["pose_keypoints_2d"][o+1]+1)), 5, color, thickness=-1)
-
+                
                 # 縮小
                 output_frame = cv2.resize(frame, (avi_width, avi_height))
 
@@ -508,12 +537,12 @@ def create_centerz_model(sess, phi_predict_ph):
     hidden1_dense_kernel = sess.graph.get_operation_by_name("hidden1_dense/kernel/Assign")
     hidden1_dense_kernel_weight = sess.run(hidden1_dense_kernel.inputs[0])
     logger.debug("hidden1_dense_kernel_weight: %s", hidden1_dense_kernel_weight)
-
+    
     # 隠れ層１のバイアス
     hidden1_dense_bias = sess.graph.get_operation_by_name("hidden1_dense/bias/Assign")
     hidden1_dense_bias_weight = sess.run(hidden1_dense_bias.inputs[0])
     logger.debug("hidden1_dense_bias_weight: %s", hidden1_dense_bias_weight)
-
+    
     # 出力層の重み
     outlayer_dense_kernel = sess.graph.get_operation_by_name("outlayer_dense/kernel/Assign")
     outlayer_dense_kernel_weight = sess.run(outlayer_dense_kernel.inputs[0])
@@ -533,10 +562,10 @@ def create_centerz_model(sess, phi_predict_ph):
     outlayer = tf.layers.Dense(units=1,activation=None,kernel_initializer=tf.constant_initializer(value=outlayer_dense_kernel_weight, dtype=outlayer_dense_kernel_weight.dtype),bias_initializer=tf.constant_initializer(value=outlayer_dense_bias_weight, dtype=outlayer_dense_bias_weight.dtype), name="restore_outlayer")
     y = outlayer(x1)
 
-    # 一度重みを取らないとエラーになる？
+    # 一度重みを取らないとエラーになる？    
     ow = outlayer.get_weights()
     logger.debug("ow: %s", ow)
-
+    
     return y
 
 # Openposeの結果jsonの最初を読み込む
@@ -556,7 +585,7 @@ def read_openpose_start_json(json_path):
     start_frame = 0
     # 開始フラグ
     is_started = False
-
+    
     for file_name in json_files:
         logger.debug("reading {0}".format(file_name))
         _file = os.path.join(json_path, file_name)
@@ -565,11 +594,12 @@ def read_openpose_start_json(json_path):
             data = json.load(open(_file))
         except Exception as e:
             logger.warning("JSON読み込み失敗のため、空データ読み込み, %s %s", _file, e)
-            data = json.load(open("tensorflow/json/all_empty_keypoints.json"))
+            filename = join(abspath(dirname(__file__)),"json/all_empty_keypoints.json")
+            data = json.load(open(filename))
 
         # 12桁の数字文字列から、フレームINDEX取得
         frame_idx = int(re.findall("(\d{12})", file_name)[0])
-
+        
         if (frame_idx <= 0 or is_started == False) and len(data["people"]) > 0:
             # 何らかの人物情報が入っている場合に開始
             # 開始したらフラグを立てる
@@ -603,42 +633,49 @@ def get_video_info(video_path):
 
 
 
-def main(input_video_path, json_path, past_depth_path):
-    model_path = os.path.join(os.path.dirname(__file__),"data/NYU_FCRN.ckpt")
-    number_people_max = 1
-    interval = 10
-    end_frame_no = -1
-    #reverse_specific=[]
-    #order_specific=[]
-    centerz_model_path = None
+def depth_pred(input_video_path, json_path, now_str):
+    # Parse arguments
+    model_path = join(abspath(dirname(__file__)),"data/NYU_FCRN.ckpt")
+    centerz_model_path=None
+    number_people_max=1
+    reverse_specific=""
+    order_specific=""
+    end_frame_no=-1
+    verbose=1
 
-    logger.setLevel(level[3])
+    logger.setLevel(level[verbose])
 
     # 間隔は1以上の整数
-    interval = interval if interval > 0 else 1
+    interval = 10
 
     # AVI出力有無
     is_avi_output = False
 
     # 出力用日付
-    now_str = "{0:%Y%m%d_%H%M%S}".format(datetime.datetime.now())
+    #if args.now is None:
+    #    now_str = "{0:%Y%m%d_%H%M%S}".format(datetime.datetime.now())
+    #else:
+    #    now_str = args.now
 
     # 日付+depthディレクトリ作成
     depth_path = '{0}/{1}_{2}_depth'.format(os.path.dirname(json_path), os.path.basename(json_path), now_str)
     os.makedirs(depth_path, exist_ok=True)
 
     # 過去深度ディレクトリ
-    past_depth_path = past_depth_path if past_depth_path is not None and len(past_depth_path) > 0 else None
+    past_depth_path =  None
 
     # 強制反転指定用辞書作成
     reverse_specific_dict = {}
-    """
-    if args.reverse_specific is not None and len(args.reverse_specific) > 0:
-        for frame in args.reverse_specific.split(']'):
+    if reverse_specific is not None and len(reverse_specific) > 0:
+        for frame in reverse_specific.split(']'):
             # 終わりカッコで区切る
             if ':' in frame:
                 # コロンでフレーム番号と人物を区切る
                 frames = frame.lstrip("[").split(':')[0]
+                # logger.debug("frame: %s", frame)
+                # logger.debug("frames: %s", frames)
+                # logger.debug("frame.split(':')[1]: %s", frame.split(':')[1])
+                # logger.debug("frame.split(':')[1].split(','): %s", frame.split(':')[1].split(','))
                 if '-' in frames:
                     frange = frames.split('-')
                     if len(frange) >= 2 and frange[0].isdecimal() and frange[1].isdecimal():
@@ -649,7 +686,7 @@ def main(input_video_path, json_path, past_depth_path):
 
                             # 人物INDEXとその反転内容を保持
                             reverse_specific_dict[f][int(frame.split(':')[1].split(',')[0])] = frame.split(':')[1].split(',')[1]
-                else:
+                else:        
                     if frames not in reverse_specific_dict:
                         # 該当フレームがまだない場合、作成
                         reverse_specific_dict[int(frames)] = {}
@@ -660,15 +697,13 @@ def main(input_video_path, json_path, past_depth_path):
         logger.warning("反転指定リスト: %s", reverse_specific_dict)
 
         paramf = open( depth_path + "/reverse_specific.txt", 'w')
-        paramf.write(args.reverse_specific)
+        paramf.write(reverse_specific)
         paramf.close()
-    """
 
     # 強制順番指定用辞書作成
     order_specific_dict = {}
-    """
-    if args.order_specific is not None and len(args.order_specific) > 0:
-        for frame in args.order_specific.split(']'):
+    if order_specific is not None and len(order_specific) > 0:
+        for frame in order_specific.split(']'):
             # 終わりカッコで区切る
             if ':' in frame:
                 # コロンでフレーム番号と人物を区切る
@@ -683,7 +718,7 @@ def main(input_video_path, json_path, past_depth_path):
 
                             for person_idx in frame.split(':')[1].split(','):
                                 order_specific_dict[f].append(int(person_idx))
-                else:
+                else:        
                     if frames not in order_specific_dict:
                         # 該当フレームがまだない場合、作成
                         order_specific_dict[int(frames)] = []
@@ -694,18 +729,17 @@ def main(input_video_path, json_path, past_depth_path):
         logger.warning("順番指定リスト: %s", order_specific_dict)
 
         paramf = open( depth_path + "/order_specific.txt", 'w')
-        paramf.write(args.order_specific)
+        paramf.write(order_specific)
         paramf.close()
-    """
 
     # Predict the image
-    predict_video(now_str, model_path, centerz_model_path, input_video_path, depth_path, past_depth_path, interval, json_path, number_people_max, reverse_specific_dict, order_specific_dict, is_avi_output, end_frame_no, 3)
+    predict_video(now_str, model_path, centerz_model_path, input_video_path, depth_path, past_depth_path, interval, json_path, number_people_max, reverse_specific_dict, order_specific_dict, is_avi_output, end_frame_no, verbose)
 
     logger.info("Done!!")
     logger.info("深度推定結果: {0}".format(depth_path +'/depth.txt'))
 
 if __name__ == '__main__':
-    main()
+    depth_pred()
 
 
 

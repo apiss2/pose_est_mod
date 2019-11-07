@@ -7,14 +7,14 @@ import json
 import copy
 import sys
 import re
-#from matplotlib import pyplot as plt
-#import imageio
+from matplotlib import pyplot as plt
+import imageio
 from collections import Counter
+from os.path import dirname, join, basename, abspath
 
 # ファイル出力ログ用
 file_logger = logging.getLogger("message").getChild(__name__)
 logger = logging.getLogger("__main__").getChild(__name__)
-FCRN_dir = os.path.abspath(os.path.dirname(__file__))
 
 level = {0: logging.ERROR,
             1: logging.WARNING,
@@ -33,13 +33,15 @@ def sort(cnt, _display_idx, _iidx, sorted_idxs, now_str, interval, subdir, json_
         org_data = json.load(open(_file))
     except Exception as e:
         logger.warning("JSON読み込み失敗のため、空データ読み込み, %s %s", _file, e)
-        data = json.load(open(os.path.join(FCRN_dir, "json/all_empty_keypoints.json")))
-        org_data = json.load(open(os.path.join(FCRN_dir, "json/all_empty_keypoints.json")))
+        filename = join(abspath(dirname(__file__)),"json/all_empty_keypoints.json")
+        data = json.load(open(filename))
+        org_data = json.load(open(filename))
 
     for i in range(len(data["people"]), number_people_max):
         # 足りない分は空データを埋める
-        data["people"].append(json.load(open(os.path.join(FCRN_dir, "json/one_keypoints.json"))))
-        org_data["people"].append(json.load(open(os.path.join(FCRN_dir, "json/one_keypoints.json"))))
+        filename = join(abspath(dirname(__file__)),"json/one_keypoints.json")
+        data["people"].append(json.load(open(filename)))
+        org_data["people"].append(json.load(open(filename)))
 
     logger.info("人体別処理: iidx: %s file: %s ------", _iidx, file_name)
 
@@ -155,7 +157,7 @@ def sort(cnt, _display_idx, _iidx, sorted_idxs, now_str, interval, subdir, json_
                 is_all_reverses[pidx] = False
                 is_upper_reverses[pidx] = False
                 is_lower_reverses[pidx] = False
-
+            
             if is_all_reverses[pidx]:
                 # 現在の反転状況(全身反転)
                 is_now_upper_reversed[pidx] = True
@@ -197,7 +199,7 @@ def sort(cnt, _display_idx, _iidx, sorted_idxs, now_str, interval, subdir, json_
                 is_all_reverses[pidx] = is_retake_all_reverses[0]
                 is_upper_reverses[pidx] = is_retake_upper_reverses[0]
                 is_lower_reverses[pidx] = is_retake_lower_reverses[0]
-
+                
                 logger.debug("＊＊反転再チェック: _iidx: %s, pidx: %s, all: %s, upper: %s, lower: %s", _iidx, pidx, is_all_reverses[pidx], is_upper_reverses[pidx], is_lower_reverses[pidx])
 
                 if is_all_reverses[pidx]:
@@ -219,7 +221,7 @@ def sort(cnt, _display_idx, _iidx, sorted_idxs, now_str, interval, subdir, json_
                 # 反転対象外の場合、クリア
                 is_now_upper_reversed[pidx] = False
                 is_now_lower_reversed[pidx] = False
-
+                
             logger.info("＊＊反転確定：pidx: %s, is_now_upper_reversed: %s, is_now_lower_reversed: %s", pidx, is_now_upper_reversed[pidx], is_now_lower_reversed[pidx])
 
             # # トレース失敗の場合、クリア
@@ -255,9 +257,11 @@ def sort(cnt, _display_idx, _iidx, sorted_idxs, now_str, interval, subdir, json_
                 file_logger.warning("※※{0:05d}F目 {2}番目の人物、反転なし [{0}:{2},N]{3}".format( _iidx, _display_idx, pidx, reverse_specific_str))
 
         # 一旦空データを読む
-        outputdata = json.load(open(os.path.join(FCRN_dir, "json/empty_keypoints.json")))
+        filename = join(abspath(dirname(__file__)),"json/empty_keypoints.json")
+        outputdata = json.load(open(filename))
         # 一旦空データを読む
-        all_outputdata = json.load(open(os.path.join(FCRN_dir, "json/empty_keypoints.json")))
+        filename = join(abspath(dirname(__file__)),"json/empty_keypoints.json")
+        all_outputdata = json.load(open(filename))
 
         # 過去の上書きがない元データ
         org_sidx_data = org_data["people"][sidx]["pose_keypoints_2d"]
@@ -281,7 +285,7 @@ def sort(cnt, _display_idx, _iidx, sorted_idxs, now_str, interval, subdir, json_
             elif is_now_upper_reversed[pidx] == False and is_now_lower_reversed[pidx]:
                 # 反転している場合、反転INDEX(下半身)
                 oidx = OPENPOSE_REVERSE_LOWER[oidx]
-
+            
             # 出力データはオリジナルデータのみコピー
             outputdata["people"][0]["pose_keypoints_2d"][o] = org_sidx_data[oidx*3]
             outputdata["people"][0]["pose_keypoints_2d"][o+1] = org_sidx_data[oidx*3+1]
@@ -459,7 +463,7 @@ def sort(cnt, _display_idx, _iidx, sorted_idxs, now_str, interval, subdir, json_
             # 一行分を追記
             depthzf.write("{0}, {1}\n".format(_display_idx, ','.join(pred_z_str_ary)))
             depthzf.close()
-    """
+
     # 深度画像保存 -----------------------
     if _iidx % interval == 0 and level[verbose] <= logging.INFO and len(pred_multi_frame_ary[_iidx]) > 0:
         # Plot result
@@ -485,7 +489,6 @@ def sort(cnt, _display_idx, _iidx, sorted_idxs, now_str, interval, subdir, json_
             png_lib.append(imageio.imread(plotName))
 
         plt.close()
-    """
 
     file_logger.warning("＊＊{0:05d}F目の出力順番: [{0}:{2}], 位置: {3}".format(_iidx, _display_idx, ','.join(map(str, sorted_idxs[_iidx])), sorted(display_nose_pos.items()) ))
 
